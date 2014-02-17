@@ -1,4 +1,4 @@
-cp1 = function(){
+﻿cp1 = function(){
     var cp = {},
         _document = document;
         
