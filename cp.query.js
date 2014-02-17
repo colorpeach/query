@@ -1,4 +1,4 @@
-﻿cp1 = function(){
+cp1 = function(){
     var cp = {},
         _document = document;
         
@@ -8,19 +8,16 @@
         array_push = arrayPrototype.push,
         array_forEach = arrayPrototype.forEach;
     
-    //��ѯnode
     cp.query = function(node){
         return cp.protoLink( cpSelect(node) );
     };
     
-    //��չ����
     cp.extend = function(first,second){
         for(var n in second){
             first[n] = second[n];
         }
     };
     
-    //����
     cp.each = array_forEach ? function(group,callback){
         array_forEach.call(group,callback);
         return group;
@@ -44,7 +41,6 @@
         return list;
     };
     
-    //��������תΪ����
     cp.toArray = function(pseudoarray){
         return cp.map(pseudoarray,function(i,n){return n;});
 //         return array_slice.call(pseudoarray);
@@ -70,7 +66,6 @@
         
     };
     
-    //�ϲ�����
     cp.merge = function(first,second){
         second.length && array_push.apply(first,second);
         return first;

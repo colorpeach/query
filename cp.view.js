@@ -1,5 +1,5 @@
 (function(){
-    var cp1 = cp1 || {};
+    cp1 = cp1 || {};
     
     var cache = {};
     cp1.template = function(mark,str,data){
@@ -12,7 +12,12 @@
                 data = str;
                 str = document.getElementById(mark).innerHTML;
             }
-            cache[mark] = new Function("data","");
+            cache[mark] = new Function("data",
+                          ""+
+                          str
+                          .replace(/[\r\t\n]/g, " ")
+                          .replace();
+                          );
         }
     };
 })();
