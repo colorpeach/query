@@ -1,21 +1,30 @@
 cp1 = function(){
     var cp = {},
         _document = document;
+        
+    var arrayPrototype = Array.prototype,
+        array_indexOf = arrayPrototype.indexOf,
+        array_slice = arrayPrototype.slice,
+        array_push = arrayPrototype.push,
+        array_forEach = arrayPrototype.forEach;
     
-    //²éÑ¯node
+    //ï¿½ï¿½Ñ¯node
     cp.query = function(node){
         return cp.protoLink( cpSelect(node) );
     };
     
-    //À©Õ¹¶ÔÏó
+    //ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½
     cp.extend = function(first,second){
         for(var n in second){
             first[n] = second[n];
         }
     };
     
-    //±éÀú
-    cp.each = function(group,callback){
+    //ï¿½ï¿½ï¿½ï¿½
+    cp.each = array_forEach ? function(group,callback){
+        array_forEach.call(group,callback);
+        return group;
+    }:function(group,callback){
         for(var i=0,len=group.length,node;i<len;i++){
             node = group[i];
             if(callback(node,i) === false)
@@ -35,16 +44,55 @@ cp1 = function(){
         return list;
     };
     
-    //½«ÀàÊý×é×ªÎªÊý×é
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½
     cp.toArray = function(pseudoarray){
         return cp.map(pseudoarray,function(i,n){return n;});
-//         return Array.prototype.slice.call(pseudoarray);
+//         return array_slice.call(pseudoarray);
     };
     
-    //ºÏ²¢Êý×é
+    cp.inArray = array_indexOf ? function(elem,arr,i){
+        return array_indexOf.call( arr, elem, i );
+    }:function(elem,arr,i){
+
+		if ( arr ) {
+			var len = arr.length;
+			i = i ? i < 0 ? Math.max( 0, len + i ) : i : 0;
+
+			for ( ; i < len; i++ ) {
+				// Skip accessing in sparse arrays
+				if ( i in arr && arr[ i ] === elem ) {
+					return i;
+				}
+			}
+		}
+
+		return -1;
+        
+    };
+    
+    //ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½
     cp.merge = function(first,second){
-        second.length && Array.prototype.push.apply(first,second);
+        second.length && array_push.apply(first,second);
         return first;
+    };
+    
+    cp.unique = function(group){
+        var node,
+            len = group.length,
+            i = 0,
+            j;
+        
+        for(;i<len;i++){
+            j = i+1;
+            for(;j<len;j++){
+                if(group[i] === group[j]){
+                    len--;
+                    group.splice(j--,1);
+                }
+            }
+        }
+
+        return group;
     };
     
     cp.protoLink = function(object){
@@ -66,7 +114,7 @@ cp1 = function(){
             for(var i=0,self=this,len=self.length;len--;){
                 cp.merge(self,cpSelect(node,self.shift()));
             }
-            return self;
+            return cp.unique(self);
         },
         eq:function(i){
             var self = this,
@@ -119,13 +167,33 @@ cp1 = function(){
             });
         },
         hasClass:function(className){
-            
+            var el = this[0] || {};
+            if (el.classList)
+              return el.classList.contains(className);
+            else
+              return new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
         },
         addClass:function(className){
-            
+            return cp.each(this,function(n,i){
+                var el = n;
+                if (!el.className){
+                    el.className = className;
+                }else if (el.classList){
+                    el.classList.add(className);
+                }else{
+                    el.className = cp.unique((el.className+=" "+className).split(/\S+/g)).join(" ");
+                }
+                    
+            });
         },
         removeClass:function(className){
-            
+            return cp.each(this,function(n,i){
+                var el = n;
+                if (el.classList)
+                    el.classList.remove(className);
+                else if(el.className)
+                    el.className = el.className.replace(new RegExp('(^| )' + className + '( |$)', 'gi')," ");
+            });
         },
         data:function(){
             
