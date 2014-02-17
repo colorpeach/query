@@ -1,23 +1,24 @@
 (function(){
     cp1 = cp1 || {};
     
-    var cache = {};
+    cache = {};
     cp1.template = function(mark,str,data){
         var fn;
         
-        if(fn = cache[mark]){
-            return fn(data);
-        }else{
+        if(!(fn = cache[mark])){
             if(typeof str !== "string"){
                 data = str;
                 str = document.getElementById(mark).innerHTML;
             }
-            cache[mark] = new Function("data",
-                          ""+
+            fn = cache[mark] = new Function("data",
+                          "var p=[];"+
+                          "return "+
                           str
                           .replace(/[\r\t\n]/g, " ")
-                          .replace();
+                          .replace(/\"/g,'\"')
+                          .replace(/\'/g,"\'");
                           );
         }
+        return fn(data);
     };
 })();
