@@ -12,11 +12,10 @@
             }
             fn = cache[mark] = new Function("data",
                           "var p=[];"+
-                          "return "+
+                          "return '"+
                           str
-                          .replace(/[\r\t\n]/g, " ")
-                          .replace(/\"/g,'\"')
-                          .replace(/\'/g,"\'");
+                          .replace(/[\r\t\n]/g, " ")+
+                          "';"
                           );
         }
         return fn(data);
