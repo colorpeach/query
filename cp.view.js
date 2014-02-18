@@ -1,20 +1,22 @@
 (function(){
-    cp1 = cp1 || {};
     
     cache = {};
-    cp1.template = function(mark,str,data){
+    cp.template = function(mark,str,data){
         var fn;
         
-        if(!(fn = cache[mark])){
+        if(fn = cache[mark]){
+            data = str;
+        }else{
             if(typeof str !== "string"){
                 data = str;
                 str = document.getElementById(mark).innerHTML;
             }
             fn = cache[mark] = new Function("data",
-                          "var p=[];"+
                           "return '"+
                           str
-                          .replace(/[\r\t\n]/g, " ")+
+                          .replace(/\<\%\S+\%\>/g,function(str){
+                              return "'+data."+str.slice(2,-2)+"+'";
+                          })+
                           "';"
                           );
         }
