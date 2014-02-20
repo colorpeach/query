@@ -22,13 +22,24 @@
         dispatch:function(){
             
         },
-        returnHandler:function(handlersO){
-            var handlers = handlersO.handlers;
-            return function(e){
-                var e = e || window.event;
+        returnHandler:function(handlers){
+            return function(event){
+                var e,
+                    ns,
+                    args = arguments;
+                
+                if(typeof event === "string"){
+                    ns = event;
+                    e = args[1] || window.event;
+                    args = Array.prototype.slice.call(args,1);
+                }else{
+                    ns = false;
+                    e = event || window.event;
+                }
+                
                 for(var i=0,len=handlers.length;i<len;i++){
-                    if(!(handlersO.ns && handlers[i].ns !== handlersO.ns))
-                        if(handlers[i].h.apply(this,arguments) === false)break;
+                    if(!(ns && handlers[i].ns !== ns))
+                        if(handlers[i].h.apply(this,args) === false)break;
                 }
             };
         }
@@ -57,7 +68,7 @@
             }else{
                 eventItem = {node:node};
                 eventItem[type] = {handlers:[{h:handler,ns:ns}]};
-                eventItem[type].handler = eventMethod.returnHandler(eventItem[type]);
+                eventItem[type].handler = eventMethod.returnHandler(eventItem[type].handlers);
                 eventMapList.push(eventItem);
             }
             
@@ -123,8 +134,7 @@
         ns = ns.length > 1 && (type = ns[1],ns[0]);
         cp.each(eventMapList,function(n,i){
             if(n.node === node && n[type]){
-                n[type].ns = ns;
-                n[type].handler.apply(node,cp.merge([e],args));
+                n[type].handler.apply(node,cp.merge(ns ? [ns,e]:[e],args));
             }
         });
     };
