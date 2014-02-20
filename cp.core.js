@@ -63,7 +63,7 @@
     };
     
     cp.merge = function(first,second){
-        second.length && array_push.apply(first,second);
+        seconde && second.length && array_push.apply(first,second);
         return first;
     };
     
