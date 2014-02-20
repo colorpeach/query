@@ -22,11 +22,13 @@
         dispatch:function(){
             
         },
-        returnHandler:function(handlers){
+        returnHandler:function(handlersO){
+            var handlers = handlersO.handlers;
             return function(e){
                 var e = e || window.event;
                 for(var i=0,len=handlers.length;i<len;i++){
-                    if(handlers[i].apply(this,arguments) === false)break;
+                    if(!(handlersO.ns && handlers[i].ns !== handlersO.ns))
+                        if(handlers[i].h.apply(this,arguments) === false)break;
                 }
             };
         }
@@ -38,39 +40,65 @@
     
     //绑定事件
     cp.bind = function(node,type,handler){
-        var eventItem;
+        var eventItem,ns;
         
-        cp.each(eventMapList,function(n,i){
-            if(n.node === node && n[type].handlers.length){
-                eventItem = n;
+        if(type){
+            ns = type.split(".");
+            ns = ns.length > 1 && (type = ns[1],ns[0]);
+        
+            cp.each(eventMapList,function(n,i){
+                if(n.node === node && n[type].handlers.length){
+                    eventItem = n;
+                }
+            });
+            
+            if(eventItem){
+                eventItem[type].handlers.push({h:handler,ns:ns});
+            }else{
+                eventItem = {node:node};
+                eventItem[type] = {handlers:[{h:handler,ns:ns}]};
+                eventItem[type].handler = eventMethod.returnHandler(eventItem[type]);
+                eventMapList.push(eventItem);
             }
-        });
-        
-        if(eventItem){
-            eventItem[type].handlers.push(handler);
-        }else{
-            eventItem = {node:node};
-            eventItem[type] = {handlers:[handler]};
-            eventItem[type].handler = eventMethod.returnHandler(eventItem[type].handlers);
-            eventMapList.push(eventItem);
+            
+            eventMethod.bind(node,type,eventItem[type].handler);
         }
-        
-        eventMethod.bind(node,type,eventItem[type].handler);
     };
     
     //解绑事件
     cp.unbind = function(node,type){
-        var handler;
+        var handler,ns;
         
         if(type){
-            cp.each(eventMapList,function(n,i){
+            ns = type.split(".");
+            ns = ns.length > 1 && (type = ns[1],ns[0]);
+            
+            cp.each(eventMapList,function(n){
                 if(n.node === node && n[type]){
-                    eventMethod.unbind(node,type,n[type].handler);
-                    delete n[type];
-                    var j = 0,m;
-                    for(m in n){j++};
+                    if(ns){
+                        for(var i=0,list=n[type].handlers,len=list.length;i<len;i++){
+                            if(list[i].ns === ns){
+                                list.splice(i,1);
+                                len--;
+                                i--;
+                            }
+                        }
+                    }
                     
-                    if(j === 1) eventMapList.splice(i,1);
+                    //如果不存在命名空间，或者该类型事件处理函数列表为空，将事件缓存删除
+                    if(!ns || !list.length){
+                        eventMethod.unbind(node,type,n[type].handler);
+                        delete n[type];
+                    }
+                    
+                    (function(){
+                        var j = 0,m;
+                        for(m in n){
+                            if(j++)break;
+                        };
+                        
+                        j === 1 && eventMapList.splice(i,1);
+                    })();
                     return false;
                 }
             });
@@ -79,7 +107,7 @@
                 if(n.node === node){
                     eventMapList.splice(i,1);
                     for(var m in n){
-                        m !== "node" && eventMethod.unbind(node,type,n[type].handler);
+                        m !== "node" && eventMethod.unbind(node,m,n[m].handler);
                     }
                     return false;
                 }
@@ -89,9 +117,13 @@
     
     //触发事件
     cp.trigger = function(node,type,args){
-        var e;
+        //TODO trigger事件对象
+        var e,
+            ns = type.split(".");
+        ns = ns.length > 1 && (type = ns[1],ns[0]);
         cp.each(eventMapList,function(n,i){
             if(n.node === node && n[type]){
+                n[type].ns = ns;
                 n[type].handler.apply(node,cp.merge([e],args));
             }
         });
