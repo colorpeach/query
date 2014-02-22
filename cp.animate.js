@@ -1,5 +1,6 @@
 (function(){
-    
+    //一毫秒，60帧
+    var iframeTime = 1000/60;
     
 	//Easing functions adapted from Robert Penner's easing equations
 	//http://www.robertpenner.com/easing/
@@ -143,23 +144,40 @@
 			window.oRequestAnimationFrame ||
 			window.msRequestAnimationFrame ||
 			function(callback) {
-				window.setTimeout(callback, 1000 / 60);
+				window.setTimeout(callback, iframeTime);
 			};
 	})();
     
-    cp.animate = function(){
+    cp.animate = function(node,css,spead,easing,fn){
+//         var style = node.style;
         
+        animate(spead,easing,fn);
+    };
+    
+    cp.fadeIn = function(node,speed,easing,fn){
+        cp.animate(node,"opacity",spead,easing,fn);
     };
 	
-	var i=0;
-	cp.a = function(){
-		i = i+0.1;
-		RAF(function(){
-			if(i <= 1){
-				cp.a();
-			}
+	//动画函数
+	function animate(spead,easing,fn){
+        var easingFn = animationOptions[easing||"linear"],
+            spead = spead || 1000,
+			count = spead/iframeTime,
+			total = easingFn(count),
+			i=0;
+		
+		function animateLoop(){
+            i++;
 			
-			console.log(animationOptions.easeOutBounce(i));
-		});
+            console.log(easingFn(i)/total);
+            if(i < count){
+                RAF(animateLoop);
+            }else{
+                fn && fn();
+                return;
+            }
+		}
+        
+        RAF(animateLoop);
 	};
 })();

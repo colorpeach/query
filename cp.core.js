@@ -1,11 +1,12 @@
 (function(){
-        
+    
+    //数组基本方法
     var arrayPrototype = Array.prototype,
         array_indexOf = arrayPrototype.indexOf,
         array_slice = arrayPrototype.slice,
         array_push = arrayPrototype.push,
         array_forEach = arrayPrototype.forEach;
-		
+        
     cp  = {};
     
     cp.extend = function(first,second){
@@ -63,7 +64,7 @@
     };
     
     cp.merge = function(first,second){
-        seconde && second.length && array_push.apply(first,second);
+        second.length && array_push.apply(first,second);
         return first;
     };
     
@@ -85,4 +86,15 @@
 
         return group;
     };
+	
+	//工具 utils
+	var objectPrototype = Object.prototype;
+	
+	cp.isObject = function(obj){
+		return obj === Object(obj);
+	};
+	
+	cp.isArray = function(obj){
+		objectPrototype.toString.call(obj) === "[object Array]";
+	};
 })();
