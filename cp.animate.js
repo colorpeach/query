@@ -1,0 +1,6 @@
+(function(){
+    
+    cp.animate = function(){
+        
+    };
+})();
