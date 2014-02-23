@@ -8,6 +8,8 @@
         array_forEach = arrayPrototype.forEach;
         
     cp  = {};
+	
+	cp.noop = function(){};
     
     cp.extend = function(first,second){
         for(var n in second){
@@ -16,14 +18,16 @@
     };
     
     cp.each = array_forEach ? function(group,callback){
-        array_forEach.call(group,callback);
+        array_forEach.call(group,callback||cp.noop);
         return group;
     }:function(group,callback){
-        for(var i=0,len=group.length,node;i<len;i++){
-            node = group[i];
-            if(callback(node,i) === false)
-                break;
-        }
+		if(callback){
+			for(var i=0,len=group.length,node;i<len;i++){
+				node = group[i];
+				if(callback(node,i,group) === false)
+					break;
+			}
+		}
         return group;
     };
     
