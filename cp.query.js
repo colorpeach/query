@@ -110,9 +110,30 @@
                 else if(el.className)
                     el.className = el.className.replace(new RegExp('(^| )' + className + '( |$)', 'gi')," ");
             });
-        },
-        data:function(){
+        }
+    });
+    
+    var dataCache = {},
+        dataUuid = 0;
+    cp.extend(cpSelectPrototype,{
+        data:function(name,value){
             
+            if(value == undefined){
+                var el = this[0];
+                return (dataCache[el.uuid||""]||{})[name];
+            }else{
+                return cp.each(this,function(n,i){
+                            var data = dataCache[n.uuid = ++dataUuid] = {};
+                            data[name] = value;
+                        });
+            }
+        },
+        removeData:function(name){
+            return cp.each(this,function(n,i){
+                        var data = dataCache[n.uuid]||{};
+                        if(data[name] != undefined)
+                            delete data[name];
+                    });
         }
     });
     
