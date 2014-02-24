@@ -12,7 +12,7 @@
     };
     
     cp.protoLink = function(object){
-        object.__proto__ = cpSelectPrototype;
+        object.__proto__ ? (object.__proto__ = cpSelectPrototype) : cp.extend(object,cpSelectPrototype);
         return object;
     };
     
