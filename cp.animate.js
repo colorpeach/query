@@ -147,29 +147,48 @@
 				window.setTimeout(callback, iframeTime);
 			};
 	})();
+	
+	var CSS = {
+			setStyle:function(node,css,value){
+				node.style[css] = value;
+			}
+		};
     
-    cp.animate = function(node,css,spead,easing,fn){
-//         var style = node.style;
-        
-        animate(spead,easing,fn);
+    cp.animate = function(node,css,from,to,spead,easing,fn){
+		animate(node,css,from,to,spead,easing,fn);
     };
+	
+// 	cp.slideDown = function(node,speed,easing,fn){
+// 		var height = parseInt(node.style.height);
+//         cp.animate(node,"height",0,height,speed,easing,fn);
+//     };
+	
+// 	cp.slideUp = function(node,speed,easing,fn){
+// 		var height = parseInt(node.style.height);
+//         cp.animate(node,"height",height,0,speed,easing,fn);
+//     };
     
     cp.fadeIn = function(node,speed,easing,fn){
-        cp.animate(node,"opacity",spead,easing,fn);
+        cp.animate(node,"opacity",0,1,speed,easing,fn);
+    };
+    
+    cp.fadeOut = function(node,speed,easing,fn){
+        cp.animate(node,"opacity",1,0,speed,easing,fn);
     };
 	
 	//动画函数
-	function animate(spead,easing,fn){
+	function animate(node,css,from,to,spead,easing,fn){
         var easingFn = animationOptions[easing||"linear"],
             spead = spead || 1000,
 			count = spead/iframeTime,
 			total = easingFn(count),
+			from = from == undefined ? 0:from,
+			to = to == undefined ? 1:to,
+			span = to-from,
 			i=0;
 		
 		function animateLoop(){
-            i++;
-			
-            console.log(easingFn(i)/total);
+			CSS.setStyle(node,css,from+easingFn(++i)*span/total);
             if(i < count){
                 RAF(animateLoop);
             }else{
