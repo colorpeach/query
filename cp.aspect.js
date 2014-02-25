@@ -9,23 +9,23 @@
     function aspect(type){
         return function(target,method,fn,mark){
             var aspected = target[method],
-                hanler = aspected;
+                handler = aspected;
             
             //如果已经添加过切面
             if(!aspected.target){
-                hanler = target[method] = returnHandler();
-                hanler.origin = {fn:aspected};
-                hanler.before = [];
-                hanler.after = [];
-                hanler.target = target;
+                handler = target[method] = returnHandler();
+                handler.origin = {fn:aspected};
+                handler.before = [];
+                handler.after = [];
+                handler.target = target;
             }
-            hanler[type][operaMap[type]]({fn:fn,mark:mark});
+            handler[type][operaMap[type]]({fn:fn,mark:mark});
         }
     }
     
     //
     function returnHandler(){
-        return function handler(){
+        function handler(){
             var fnList = concat.call(handler.before,handler.origin,handler.after),
                 target = handler.target,
                 len,
@@ -41,6 +41,7 @@
             
             return arg;
         }
+        return handler;
     }
     
     //移除切入
