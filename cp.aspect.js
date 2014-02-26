@@ -31,15 +31,17 @@
                 len,
                 i = 0,
                 args = arguments,
-                arg;
+                results;
                 
             if(len = fnList.length){
                 while(i < len){
-                    arg = fnList[i++].fn.apply(target,arg === undefined ? args:concat.call(concat.apply([],args),arg));
+                    if((results = fnList[i++].fn.apply(target,args)) === false){
+                        return false;
+                    }
                 }
             }
             
-            return arg;
+            return results;
         }
         return handler;
     }
