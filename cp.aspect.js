@@ -65,6 +65,7 @@
                 while(len--){
                     if(afterList[len].mark === mark){
                         afterList.splice(len,1);
+                        return;
                     }
                 }
             }else{
