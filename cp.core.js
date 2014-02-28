@@ -11,21 +11,32 @@
 	
 	cp.noop = function(){};
     
-    cp.extend = function(first,second){
-        for(var n in second){
-            first[n] = second[n];
-        }
+    cp.extend = function(first){
+		var args = arguments,
+			len = args.length;
+		if(len > 1){
+			for(var i=1;i<len;i++){
+				for(var n in args[i]){
+					first[n] = args[i][n];
+				}
+			}
+		}
     };
     
-    cp.each = array_forEach ? function(group,callback){
-        array_forEach.call(group,callback||cp.noop);
-        return group;
-    }:function(group,callback){
+    cp.each = function(group,callback){
 		if(callback){
-			for(var i=0,len=group.length,node;i<len;i++){
-				node = group[i];
-				if(callback(node,i,group) === false)
-					break;
+			if(group.length !== undefined){
+				for(var i=0,len=group.length,node;i<len;i++){
+					node = group[i];
+					if(callback(node,i,group) === false)
+						break;
+				}
+			}else{
+				for(var n in group){
+					node = group[n];
+					if(callback(node,n,group) === false)
+						break;
+				}
 			}
 		}
         return group;
