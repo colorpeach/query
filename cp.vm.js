@@ -8,6 +8,13 @@
     //验证器
     cp.vm.valid = {};
     
+    //编辑类型
+    cp.vm.editor = {
+        text:"",
+        number:"",
+        list:""
+    };
+    
     function VM(context,model){
         this.$box = context||document;
         //以uid为索引的model单元
@@ -19,6 +26,7 @@
         //初始化时的viewModel
         this.model = model;
         this.parseModel();
+        this._setEvent();
     }
     
     VM.prototype = {
@@ -32,7 +40,7 @@
                     classN,
                     classNList;
                 
-                classN = self.dataUIdMap[n.dcId || (n.dcId = ++guid)] = {dom:n,dcId:n.dcId};
+                classN = self.dataUIdMap[n.dcId || (n.dcId = ++guid)] = {dom:n,dcId:n.dcId,dataClass:dataClass.join(" ")};
                 
                 //继承所有类的属性
                 cp.each(dataClass,function(m,j){
@@ -63,6 +71,12 @@
                 }
             }
             classNList.push(classN);
+        },
+        toEdit:function(){
+            
+        },
+        toView:function(){
+            
         },
         renderData:function (name,data){
             var self = this,
@@ -106,16 +120,31 @@
             if(name in model){
                 cp.each(model[name],function(n,i){
                     var dom = n.dom,
-                        dataClass = dom.getAttribute("data-class").split(" ");
+                        dataClass = cp.trim(dom.getAttribute("data-class"));
                     
-                    dom.setAttribute("data-class",dom.getAttribute("data-class")+" "+className);
-                    self.parseModel(dom);
-                    self.renderData(name);
+                    if((" "+dataClass+" ").indexOf(" "+className+" ")<0){
+                        dom.setAttribute("data-class",dataClass+" "+className);
+                        self.parseModel(dom);
+                        self.renderData(name);
+                    }
                 });
             }
         },
         removeDataClass:function(name,className){
-            
+            var self = this,
+                model = self.dataNameMap;
+            if(name in model){
+                cp.each(model[name],function(n,i){
+                    var dom = n.dom,
+                        dataClass = " "+cp.trim(dom.getAttribute("data-class"))+" ";
+                    
+                    if(dataClass.indexOf(" "+className+" ")>-1){
+                        dom.setAttribute("data-class",cp.trim(dataClass.replace(" "+className+" "," ")));
+                        self.parseModel(dom);
+                        self.renderData(name);
+                    }
+                });
+            }
         },
         setData:function(name,val){
             if(cp.isObject(name)){
@@ -126,6 +155,29 @@
         },
         getData:function(name){
             return name ? this.data[name]:this.data;
+        },
+        _setEvent:function(){
+            var self = this,
+                dataUIdMap = self.dataUIdMap,
+                data = self.data;
+            
+            cp.bind(document,"focusin",function(e){
+                var dom = e.target;
+                
+                if(dom.dcId && dataUIdMap[dom.dcId].formatter){
+                    dom.value = data[dataUIdMap[dom.dcId].name];
+                }
+            });
+            
+            cp.bind(document,"focusout",function(e){
+                var dom = e.target,
+                    modelCell;
+                
+                if(dom.dcId){
+                    modelCell = dataUIdMap[dom.dcId];
+                    self.setData(modelCell.name,dom.value);
+                }
+            });
         }
     };
     
@@ -147,24 +199,3 @@ var model = {
         }
     }
 };
-
-var vm = cp.vm({
-    name:{
-        name:"name",
-        formatter:function(dom,data){
-            return data.cell+1;
-        }
-    },
-    ext:{
-        formatter:function(dom,data){
-            return data.cell+2;
-        }
-    },
-    ext2:{
-        formatter:function(dom,data){
-            return data.cell+3;
-        }
-    }
-});
-
-vm.renderData({name:"dd",sex:"dcc",good:"ccc",ok:"ddd"});

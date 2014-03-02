@@ -30,18 +30,95 @@
                 
                 if(typeof event === "string"){
                     ns = event;
-                    e = args[1] || window.event;
-                    args = Array.prototype.slice.call(args,1);
+                    e = new standardEvent(args[1] || window.event);
+                    args = Array.prototype.slice.call(args,2);
                 }else{
                     ns = false;
-                    e = event || window.event;
+                    e = new standardEvent(event || window.event);
+                    args = Array.prototype.slice.call(args,1);
                 }
+                
+                args = cp.merge([e],args);
                 
                 for(var i=0,len=handlers.length;i<len;i++){
                     if(!(ns && handlers[i].ns !== ns))
                         if(handlers[i].h.apply(this,args) === false)break;
                 }
             };
+        }
+    };
+    
+    function returnTrue() {
+        return true;
+    }
+    
+    function returnFalse() {
+        return false;
+    }
+    
+    var standardEvent = function(src, props){
+        if ( !(this instanceof standardEvent) ) {
+            return new standardEvent( src, props );
+        }
+    
+        if ( src && src.type ) {
+            this.originalEvent = src;
+            this.type = src.type;
+    
+            this.isDefaultPrevented = ( src.defaultPrevented || src.returnValue === false ||
+                src.getPreventDefault && src.getPreventDefault() ) ? returnTrue : returnFalse;
+                
+            this.target = src.target||src.srcElement||document;
+    
+        } else {
+            this.type = src;
+        }
+    
+        if ( props ) {
+            cp.extend( this, props );
+        }
+    
+        this.timeStamp = src && src.timeStamp || (new Date()).getTime();
+    };
+    
+    // http://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
+    standardEvent.prototype = {
+        isDefaultPrevented: returnFalse,
+        isPropagationStopped: returnFalse,
+        isImmediatePropagationStopped: returnFalse,
+    
+        preventDefault: function() {
+            var e = this.originalEvent;
+    
+            this.isDefaultPrevented = returnTrue;
+            if ( !e ) {
+                return;
+            }
+    
+            if ( e.preventDefault ) {
+                e.preventDefault();
+    
+            } else {
+                e.returnValue = false;
+            }
+        },
+        stopPropagation: function() {
+            var e = this.originalEvent;
+    
+            this.isPropagationStopped = returnTrue;
+            if ( !e ) {
+                return;
+            }
+            
+            if ( e.stopPropagation ) {
+                e.stopPropagation();
+            }
+    
+            e.cancelBubble = true;
+        },
+        stopImmediatePropagation: function() {
+            this.isImmediatePropagationStopped = returnTrue;
+            this.stopPropagation();
         }
     };
     
@@ -58,7 +135,7 @@
             ns = ns.length > 1 && (type = ns[1],ns[0]);
         
             cp.each(eventMapList,function(n,i){
-                if(n.node === node && n[type].handlers.length){
+                if(n.node === node && type === i && n[type].handlers.length){
                     eventItem = n;
                 }
             });

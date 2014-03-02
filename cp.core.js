@@ -112,4 +112,8 @@
 	cp.isArray = function(obj){
 		objectPrototype.toString.call(obj) === "[object Array]";
 	};
+	
+	cp.trim = function(str){
+		return str.replace(/^\s+|\s+$/g,"");
+	}
 })();
