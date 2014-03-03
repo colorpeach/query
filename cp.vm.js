@@ -156,6 +156,20 @@
         getData:function(name){
             return name ? this.data[name]:this.data;
         },
+        _catchChange:function(node,fn){
+            if(node.addEventListener){
+                node.addEventListener("input",function(){},false)
+            }else{
+                node.attachEvent("onpropertychange",function(){});
+            }
+        },
+        _removeCatch:function(node,fn){
+            if(node.addEventListener){
+                node.removeEventListener("input",function(){},false)
+            }else{
+                node.detachEvent("onpropertychange",function(){});
+            }
+        },
         _setEvent:function(){
             var self = this,
                 dataUIdMap = self.dataUIdMap,
