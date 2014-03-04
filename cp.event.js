@@ -1,6 +1,12 @@
 (function(){
     //事件绑定缓存
     var eventMapList = [];
+    var docElem = document.documentElement;
+    var matchesSelector = 
+            docElem.webkitMatchesSelector ||
+            docElem.mozMatchesSelector ||
+            docElem.oMatchesSelector ||
+            docElem.msMatchesSelector;
     
     var eventMethod = {
         bind:function(node,type,handler){
@@ -19,14 +25,15 @@
                 node.removeEventListener(type,handler,false);
             }
         },
-        dispatch:function(){
+        delegate:function(){
             
         },
-        returnHandler:function(handlers){
+        returnHandler:function(handlers,node,selector){
             return function(event){
                 var e,
                     ns,
-                    args = arguments;
+                    args = arguments,
+                    target = selector;
                 
                 if(typeof event === "string"){
                     ns = event;
@@ -39,14 +46,33 @@
                 }
                 
                 args = cp.merge([e],args);
+                var el = e.target;
+                if(target){
+                    while(el&&el!==document){
+                        if(isMatch(el,target)){
+                            target = false;
+                            break;
+                        }else if(el === node){
+                            break;
+                        }else{
+                            el = el.parentNode;
+                        }
+                    }
+                }
                 
-                for(var i=0,len=handlers.length;i<len;i++){
-                    if(!(ns && handlers[i].ns !== ns))
-                        if(handlers[i].h.apply(this,args) === false)break;
+                if(!target){
+                    for(var i=0,len=handlers.length;i<len;i++){
+                        if(!(ns && handlers[i].ns !== ns))
+                            if(handlers[i].h.apply(this,args) === false)break;
+                    }
                 }
             };
         }
     };
+    
+    function isMatch(el,selector){
+        return matchesSelector.call(el,selector);
+    }
     
     function returnTrue() {
         return true;
@@ -123,11 +149,11 @@
     };
     
     cp.on = function(node,type,target,handler){
-        cp.bind(node,type,handler);
+        cp.bind(node,type,handler,target);
     };
     
     //绑定事件
-    cp.bind = function(node,type,handler){
+    cp.bind = function(node,type,handler,target){
         var eventItem,ns;
         
         if(type){
@@ -145,7 +171,7 @@
             }else{
                 eventItem = {node:node};
                 eventItem[type] = {handlers:[{h:handler,ns:ns}]};
-                eventItem[type].handler = eventMethod.returnHandler(eventItem[type].handlers);
+                eventItem[type].handler = eventMethod.returnHandler(eventItem[type].handlers,node,target);
                 eventMapList.push(eventItem);
             }
             
