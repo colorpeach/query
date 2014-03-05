@@ -89,14 +89,20 @@
                 }
             }else{
             //传入的第一个参数是字符串
-                data == undefined ? (data = self.data[name]):(self.data[name] = data);
+                data == undefined ? (data = self._getOrSetData(self.data,name)):(self._getOrSetData(self.data,name,data));
                 if(name in model){
                     cp.each(model[name],function(m,j){
                         var val = self.formatCellVal(m,{cell:data,data:self.data});
                         self.setCellVal(m.dom,val == undefined ? data:val);
                     });
-                }else{
-                    self.setCellVal($self.$box.querySelectorAll("[data-class*="+i+"]"),n);
+                }
+                
+                //TODO
+                var d = data;
+                while(cp.isObject(d)){
+                    for(var n in data){
+                        self.renderData(name+="."+n,d = data[n]);
+                    }
                 }
             }
         },
@@ -153,10 +159,24 @@
                 this.renderData(name,val == undefined ? this.data[name]:val);
             }
         },
+        _getOrSetData:function(data,name,val){
+            var names = name.split(/\.|\[|\]/g),
+                name;
+            
+            if(val != undefined)name = names.pop();
+            
+            while(names.length && cp.isObject(data = data[names.shift()])){}
+            
+            if(val != undefined)
+                data[name] = val;
+            else
+                return data;
+        },
         getData:function(name){
-            return name ? this.data[name]:this.data;
+            return name ? this._getOrSetData(this.data,name):this.data;
         },
         _catchChange:function(node,fn){
+            //TODO
             if(node.addEventListener){
                 node.addEventListener("input",function(){},false)
             }else{
@@ -164,6 +184,7 @@
             }
         },
         _removeCatch:function(node,fn){
+            //TODO
             if(node.addEventListener){
                 node.removeEventListener("input",function(){},false)
             }else{

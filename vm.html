@@ -8,7 +8,8 @@
 			<input type="text" data-class="name" />
 			<input type="text" data-class="sex ext" />
 			<span data-class="good ext"></span>
-			<span data-class="ok"></span>
+			<span data-class="data.name ok"></span>
+			<span data-class="data"></span>
 		</div>
 	</body>
 	<script type="text/javascript" src="./cp.core.js"></script>
@@ -31,9 +32,14 @@
 					formatter:function(dom,data){
 							return data.cell+3;
 					}
+			},
+			"data.name":{
+				formatter:function(dom,data){
+					return data.cell + "...";
+				}
 			}
 	});
 
-	vm.renderData({name:"dd",sex:"dcc",good:"ccc",ok:"ddd"});
+	vm.renderData({name:"dd",sex:"dcc",good:"ccc",data:{name:"ddd"}});
 	</script>
 </html>
