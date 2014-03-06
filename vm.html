@@ -9,9 +9,14 @@
 			<input type="text" data-class="sex ext" />
 			<span data-class="good ext"></span>
 			<span data-class="data.name ok"></span>
-			<span data-class="data"></span>
+			<span data-class="data.good"></span>
+			<div data-class="list[]"></div>
 		</div>
 	</body>
+	<script type="text/template" id="list-template">
+		<span data-class="list[].ok"></span>
+		<span data-class="list[].data.name"></span>
+	</script>
 	<script type="text/javascript" src="./cp.core.js"></script>
 	<script type="text/javascript" src="./cp.event.js"></script>
 	<script type="text/javascript" src="./cp.vm.js"></script>
@@ -37,9 +42,14 @@
 				formatter:function(dom,data){
 					return data.cell + "...";
 				}
+			},
+			"list[]":{
+				template:"list-template"
 			}
 	});
 
-	vm.renderData({name:"dd",sex:"dcc",good:"ccc",data:{name:"ddd"}});
+	vm.renderData({name:"dd",sex:"dcc",good:"ccc",data:{name:"ddd",good:"cdcdc"},list:[{ok:"ccc",data:{name:"dcdc"}},{ok:"aaa",data:{name:"111"}}]});
+
+	vm.renderData({name:"dd",sex:"dcc",good:"44",data:{name:"2",good:"3"},list:[{ok:"112",data:{name:"3334"}},{ok:"333",data:{name:"222"}}]});
 	</script>
 </html>

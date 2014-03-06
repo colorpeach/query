@@ -110,7 +110,7 @@
 	};
 	
 	cp.isArray = function(obj){
-		objectPrototype.toString.call(obj) === "[object Array]";
+		return objectPrototype.toString.call(obj) === "[object Array]";
 	};
 	
 	cp.trim = function(str){
