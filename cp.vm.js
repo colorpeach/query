@@ -176,12 +176,15 @@
                 //for name include "[number]"
                 var index = [],
                     formatName;
-                formatName = name.replace(/\d+/g,function(n){index.push(n);return "";});
+                formatName = name.replace(/\-*\d+/g,function(n){index.push(n);return "";});
                 
                 if(formatName in model){
                     name = formatName;
+                    model = model[name];
+                    //add "[].data.name" data
+                    model = !index.length ? model : [index[0]<0?model[model.length-1]:model[index[0]]];
                     //TODO need a method to get a right model
-                    cp.each(!index.length ? model[name]:[model[name][index.shift()]],function(m,j){
+                    cp.each(model,function(m,j){
                         var val = self.formatCellVal(m,{cell:data,data:self.data});
                         self.setCellVal(m.dom,val == undefined ? data:val);
                     });
@@ -266,8 +269,9 @@
             this._dealArrayData(name,data.length ? data : [data]);
         },
         removeData:function(name){
-            var reg = /\[\d+\]\./;
-            this._deleteModelCells(reg.test(name)?{arrayName:name}:{name:name});
+            var reg = /\[\d+\]\./,
+                reg2 = /\[\]$/;
+            this._deleteModelCells(reg.test(name)?{arrayName:name}:reg2.test(name)?{prefix:name+"."}:{name:name});
         },
         setData:function(name,val){
             if(cp.isObject(name)){
