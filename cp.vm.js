@@ -45,9 +45,12 @@
                 //generate viewModel cell
                 cp.each(dataClass,function(m,j){
                     if(m in model){
-                        cp.extend(classN,model[m]);
+                        cp.extend(true,classN,model[m]);
                     }
                 });
+                
+                //bind event
+                classN.event && (self._unbindEvent(classN),self._bindEvent(classN));
                 
                 //if viewModel cell has no name,use the first data-class
                 !classN.name && (classN.name = dataClass[0]);
@@ -76,7 +79,7 @@
             var self = this,
                 model = self.model,
                 prefix = prefix || "";
-                hasPrefix = new RegExp("^"+prefix+"[]");
+                hasPrefix = new RegExp("^"+prefix+"\\[\\]");
             
             cp.each(nodes,function(n){
                 var dataClass = n.getAttribute("data-class").split(" "),
@@ -102,6 +105,16 @@
                     self.dataNameMap[classN.name] = [classN];
                 }
                 
+            });
+        },
+        _unbindEvent:function(modelCell){
+            cp.unbind(modelCell.dom);
+        },
+        _bindEvent:function(modelCell){
+            var node = modelCell.dom,
+                events = modelCell.event;
+            cp.each(events,function(n,i){
+                cp.bind(node,i,n);
             });
         },
         _deleteModelCells:function(obj){
@@ -153,12 +166,6 @@
                     delete self.dataUIdMap[model.dcId];
                 }
             }
-        },
-        toEdit:function(){
-            
-        },
-        toView:function(){
-            
         },
         renderData:function (name,data){
             var self = this,
@@ -216,10 +223,11 @@
         },
         _dealArrayData:function(name,data,cover){
             var frag = document.createDocumentFragment(),
-                template = this._getTemplate(name),
+                template = this._getTemplate(name+"[]"),
                 dom = document.createElement("div"),
                 parent = this.dataNameMap[name+"[]"];
-                
+            
+            //if update array data,need delete old array data and dom
             cover && this._deleteModelCells({prefix:name+"[]."});
             
             for(var i=0,len=data.length;i<len;i++){
@@ -249,7 +257,7 @@
         },
         //get template by the template model cell
         _getTemplate:function(name){
-            var modelCells = this.dataNameMap[name+"[]"],
+            var modelCells = this.dataNameMap[name],
                 template;
             
             //find template from modelCells
@@ -265,12 +273,13 @@
             else
                 return "";
         },
-        addData:function(name,data,index){
-            this._dealArrayData(name,data.length ? data : [data]);
+        addData:function(name,data){
+            this._dealArrayData(name.replace(/\[\]$/,""),data.length ? data : [data]);
         },
         removeData:function(name){
             var reg = /\[\d+\]\./,
                 reg2 = /\[\]$/;
+            //if match number,user arrayName;if match [],use preifx;otherwise just use name
             this._deleteModelCells(reg.test(name)?{arrayName:name}:reg2.test(name)?{prefix:name+"."}:{name:name});
         },
         setData:function(name,val){
@@ -295,6 +304,15 @@
         },
         getData:function(name){
             return name ? this._getOrSetData(this.data,name):this.data;
+        },
+        //replace ? with the second argument
+        _formatName:function(name,arg){
+            if(typeof arg === "string")
+                arg = arg.split(",");
+            return name.replace(/\?/g,function(){
+                var str = arg.shift();
+                return str == undefined ? "":str;
+            });
         },
         _catchChange:function(node,fn){
             //TODO
@@ -366,8 +384,28 @@
                     }
                 });
             }
+        },
+        _editOrView:function(name,type){
+            var modelCells = this.dataNameMap[name],
+                editable = type === "edit"?true:false;
+            cp.each(modelCells,function(n){
+                var node = n.dom;
+                
+                if(node.nodeType === 1 && formType.indexOf("|"+node.type+"|")>-1){
+                    node.readOnly = !editable;
+//                     node.disabled = !editable;
+                }
+            });
+        },
+        toEdit:function(name){
+            this._editOrView(name,"edit");
+        },
+        toView:function(name){
+            this._editOrView(name);
         }
     };
+    
+    var formType = "|button|checkbox|file|hidden|image|password|radio|reset|submit|text|";
     
     var Dom = {
         remove:function(elt){
@@ -390,11 +428,11 @@ var model = {
         editable:true,
         editType:"text",
         validation:("required number"||function(){}),
+        delegate:{
+            target:"",
+            click:function(){}
+        },
         event:{
-            delegate:{
-                target:"",
-                click:function(){}
-            },
             click:function(){}
         }
     },

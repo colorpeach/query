@@ -11,16 +11,38 @@
 	
 	cp.noop = function(){};
     
-    cp.extend = function(first){
+    cp.extend = function extend(first){
 		var args = arguments,
-			len = args.length;
-		if(len > 1){
-			for(var i=1;i<len;i++){
-				for(var n in args[i]){
-					first[n] = args[i][n];
+			len = args.length,
+			target = first,
+			source,
+			i = 1;
+		
+		if(first === true){
+			target = args[1];
+			if(len > 2){
+				for(i=2;i<len;i++){
+					for(var n in args[i]){
+						source = args[i][n];
+						if(cp.isArray(source))
+							extend(true,target[n] || (target[n] = []),source);
+						else if(cp.isObject(source) && !cp.isFunction(source))
+							extend(true,target[n] || (target[n] = {}),source);
+						else
+							target[n] = source;
+					}
+				}
+			}
+		}else{
+			if(len > 1){
+				for(;i<len;i++){
+					for(var n in args[i]){
+						target[n] = args[i][n];
+					}
 				}
 			}
 		}
+		return target;
     };
     
     cp.each = function(group,callback){
@@ -107,6 +129,10 @@
 	
 	cp.isObject = function(obj){
 		return obj === Object(obj);
+	};
+	
+	cp.isFunction = function(obj){
+		return typeof obj === "function";
 	};
 	
 	cp.isArray = function(obj){
