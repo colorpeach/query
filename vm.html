@@ -6,50 +6,34 @@
 	</head>
 	<body>
 		<div data-class="box">
-			<input type="text" data-class="name" />
-			<input type="text" data-class="sex ext" />
-			<span data-class="good ext"></span>
-			<span data-class="data.name ok"></span>
-			<span data-class="data.good"></span>
+			<input type="text" data-class="content" />
 			<button data-class="add-item">添加</button>
-			<div data-class="list[]"></div>
+			<div data-class="list"></div>
 		</div>
 	</body>
 	<script type="text/template" id="list-template">
-		<span data-class="ok"></span>
-		<span data-class="data.name"></span>
+		<div>
+			<span data-class="content"></span>
+			<span data-class="del-item">×</span>
+		</div>
 	</script>
 	<script type="text/javascript" src="./cp.core.js"></script>
 	<script type="text/javascript" src="./cp.event.js"></script>
 	<script type="text/javascript" src="./cp.vm.js"></script>
 	<script>
 	var vm = cp.vm({
-		name:{
-			name:"name",
-			formatter:function(dom,data){
-					return data.cell+1;
-			}
-		},
-		ext:{
-			formatter:function(dom,data){
-					return data.cell+2;
-			}
-		},
-		ext2:{
-			formatter:function(dom,data){
-					return data.cell+3;
-			}
-		},
 		"add-item":{
 			event:{
 				click:function(){
-					vm.addData("list[]",{ok:"cc",data:{name:"now"}});
+					vm.add("list[]",{content:vm.get("content")});
 				}
 			}
 		},
-		"data.name":{
-			formatter:function(dom,data){
-				return data.cell + "...";
+		"del-item":{
+			event:{
+				click:function(){
+					vm.del("list[0]");
+				}
 			}
 		},
 		"list[]":{
@@ -57,8 +41,5 @@
 		}
 	});
 
-	vm.renderData({name:"dd",sex:"dcc",good:"ccc",data:{name:"ddd",good:"cdcdc"},list:[{ok:"ccc",data:{name:"dcdc"}},{ok:"aaa",data:{name:"111"}}]});
-
-// 	vm.renderData({name:"dd",sex:"dcc",good:"44",data:{name:"2",good:"3"},list:[{ok:"112",data:{name:"3334"}},{ok:"333",data:{name:"222"}}]});
 	</script>
 </html>

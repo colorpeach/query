@@ -29,7 +29,7 @@
         this._setEvent();
     }
     
-    VM.prototype = {
+    var _ = VM.prototype = {
         //generate viewModel
         parseModel:function(node){
             var self = this,
@@ -94,6 +94,9 @@
                     }
                 });
                 
+                //bind event
+                classN.event && (self._unbindEvent(classN),self._bindEvent(classN));
+                
                 !classN.name && (classN.name = dataClass[0]);
                 
                 hasPrefix.test(classN.name) || (classN.name  = prefix + "[]." + classN.name);
@@ -114,7 +117,7 @@
             var node = modelCell.dom,
                 events = modelCell.event;
             cp.each(events,function(n,i){
-                cp.bind(node,i,n);
+                cp.bind(node,i,function(e){n.call(node,e,modelCell)});
             });
         },
         _deleteModelCells:function(obj){
@@ -144,26 +147,44 @@
                 var reg = new RegExp("^"+obj.prefix.replace(/\[/g,"\\[").replace(/\]/g,"\\]").replace(/\./g,"\\."));
                 for(var m in self.dataNameMap){
                     if(reg.test(m)){
-                        cp.each(self.dataNameMap[m]||[],function(n){
-                            if(self.dataUIdMap[n.dcId]){
-                                Dom.remove(self.dataUIdMap[n.dcId].dom);
+                        if(obj.index){
+                            //a[1]
+                            var n = self.dataNameMap[m][obj.index[0]];
+                            if(n){
+                                Dom.remove(n.dom);
+                                self.dataNameMap[m].splice(obj.index[0],1);
                                 delete self.dataUIdMap[n.dcId];
                             }
-                        });
-                        delete self.dataNameMap[m];
+                        }else{
+                            //a[]
+                            cp.each(self.dataNameMap[m]||[],function(n){
+                                if(self.dataUIdMap[n.dcId]){
+                                    Dom.remove(self.dataUIdMap[n.dcId].dom);
+                                    delete self.dataUIdMap[n.dcId];
+                                }
+                            });
+                            delete self.dataNameMap[m];
+                        }
                     }
                 }
             }else if(obj.arrayName){
-                var index = [],
-                    model,
-                    formatName;
-                formatName = obj.arrayName.replace(/\d+/g,function(n){index.push(n);return "";});
-                
-                index.length && (model = self.dataNameMap[formatName]);
-                if(model[index[0]]){
-                    Dom.remove(model[index[0]].dom);
-                    model.splice(index[0],1);
-                    delete self.dataUIdMap[model.dcId];
+                var n = self.dataNameMap[obj.arrayName];
+                if(obj.index){
+                    //a[1].b
+                    if(n){
+                        Dom.remove(n[obj.index[0]].dom);
+                        delete self.dataUIdMap[n[obj.index[0]].dcId];
+                        n[obj.index[0]] = undefined;
+                    }
+                }else{
+                    //a[].b
+                    cp.each(n,function(n,i){
+                        if(n){
+                            Dom.remove(n.dom);
+                            delete self.dataUIdMap[n.dcId];
+                        }
+                    });
+                    self.dataNameMap[obj.arrayName] = [];
                 }
             }
         },
@@ -209,23 +230,25 @@
         },
         //format cell
         formatCellVal:function(modelCell,data){
-            if(modelCell.formatter){
-                return modelCell.formatter(modelCell.dom,data);
+            if(modelCell.view){
+                return modelCell.view(modelCell.dom,data);
             }
         },
         //set cell val
         setCellVal:function(node,val){
-            if(node.value !== undefined){
-                node.value = val;
-            }else{
-                node.innerHTML = val;
+            if(typeof val === "string"){
+                if(node.value !== undefined){
+                    node.value = val;
+                }else{
+                    node.innerHTML = val;
+                }
             }
         },
         _dealArrayData:function(name,data,cover){
             var frag = document.createDocumentFragment(),
                 template = this._getTemplate(name+"[]"),
                 dom = document.createElement("div"),
-                parent = this.dataNameMap[name+"[]"];
+                parent = this.dataNameMap[name];
             
             //if update array data,need delete old array data and dom
             cover && this._deleteModelCells({prefix:name+"[]."});
@@ -257,32 +280,46 @@
         },
         //get template by the template model cell
         _getTemplate:function(name){
-            var modelCells = this.dataNameMap[name],
-                template;
-            
-            //find template from modelCells
-            cp.each(modelCells,function(n,i){
-                if(n.template){
-                    template = n.template;
-                    return false;
-                }
-            });
-            
+            var modelCells = this.model[name],
+                template = modelCells.template;
+           
             if(template)
                 return (typeof template === "string" ? document.getElementById(template):template).innerHTML;
             else
                 return "";
         },
-        addData:function(name,data){
+        add:function(name,data){
             this._dealArrayData(name.replace(/\[\]$/,""),data.length ? data : [data]);
         },
-        removeData:function(name){
-            var reg = /\[\d+\]\./,
-                reg2 = /\[\]$/;
+        del:function(name){
+            var reg = /\[\d*\]\./,
+                reg1 = /\[\d*\]$/,
+                obj = {name:name};
             //if match number,user arrayName;if match [],use preifx;otherwise just use name
-            this._deleteModelCells(reg.test(name)?{arrayName:name}:reg2.test(name)?{prefix:name+"."}:{name:name});
+            if(reg1.test(name)){
+                var index = [];
+                name = name.replace(/\[\d+\]$/,function(v){
+                    index.push(v.slice(1,-1));
+                    return "[]";
+                });
+                if(index.length)
+                    obj = {prefix:name,index:index};
+                else
+                    obj = {prefix:name};
+            }else if(reg.test(name)){
+                var index = [];
+                name = name.replace(/\[\d+\]\./,function(v){
+                    index.push(v.slice(1,-2));
+                    return "[].";
+                });
+                if(index.length)
+                    obj = {arrayName:name,index:index};
+                else
+                    obj = {arrayName:name};
+            }
+            this._deleteModelCells(obj);
         },
-        setData:function(name,val){
+        set:function(name,val){
             if(cp.isObject(name)){
                 this.renderData(this.data = name);
             }else{
@@ -302,7 +339,7 @@
             else
                 return data || {};
         },
-        getData:function(name){
+        get:function(name){
             return name ? this._getOrSetData(this.data,name):this.data;
         },
         //replace ? with the second argument
@@ -338,7 +375,7 @@
             cp.bind(document,"focusin",function(e){
                 var dom = e.target;
                 
-                if(dom.dcId && dataUIdMap[dom.dcId].formatter){
+                if(dom.dcId && dataUIdMap[dom.dcId].view){
                     dom.value = data[dataUIdMap[dom.dcId].name];
                 }
             });
@@ -349,7 +386,7 @@
                 
                 if(dom.dcId){
                     modelCell = dataUIdMap[dom.dcId];
-                    self.setData(modelCell.name,dom.value);
+                    self.set(modelCell.name,dom.value);
                 }
             });
         },
@@ -424,9 +461,9 @@
 var model = {
     modelCell:{
         name:"",
-        formatter:function(){},
+        view:function(){},
         editable:true,
-        editType:"text",
+        editor:"text",
         validation:("required number"||function(){}),
         delegate:{
             target:"",

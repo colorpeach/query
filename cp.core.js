@@ -125,7 +125,6 @@
     };
 	
 	//工具 utils
-	var objectPrototype = Object.prototype;
 	
 	cp.isObject = function(obj){
 		return obj === Object(obj);
@@ -135,9 +134,15 @@
 		return typeof obj === "function";
 	};
 	
-	cp.isArray = function(obj){
-		return objectPrototype.toString.call(obj) === "[object Array]";
+	cp.isArray = Array.isArray || function(obj){
+		return toString.call(obj) === "[object Array]";
 	};
+	
+	cp.each(['Arguments', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+		cp['is' + name] = function(obj) {
+			return toString.call(obj) == '[object ' + name + ']';
+		};
+	});
 	
 	cp.trim = function(str){
 		return str.replace(/^\s+|\s+$/g,"");
