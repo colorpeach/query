@@ -24,15 +24,15 @@
 	var vm = cp.vm({
 		"add-item":{
 			event:{
-				click:function(){
+				click:function(e,data){
 					vm.add("list[]",{content:vm.get("content")});
 				}
 			}
 		},
 		"del-item":{
 			event:{
-				click:function(){
-					vm.del("list[0]");
+				click:function(e,data){
+					vm.del("list["+data.index+"]");
 				}
 			}
 		},

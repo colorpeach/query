@@ -115,10 +115,20 @@
         },
         _bindEvent:function(modelCell){
             var node = modelCell.dom,
-                events = modelCell.event;
+                events = modelCell.event,
+                self = this;
             cp.each(events,function(n,i){
-                cp.bind(node,i,function(e){n.call(node,e,modelCell)});
+                cp.bind(node,i,function(e){n.call(node,e,self._generateArgs(modelCell.dcId))});
             });
+        },
+        _generateArgs:function(dcId){
+            var modelCell = this.dataUIdMap[dcId],
+                index = cp.inArray(modelCell,this.dataNameMap[modelCell.name]);
+            return {
+                model:modelCell,
+                index:index<0?0:index,
+                cell:this.get(modelCell.name)
+            };
         },
         _deleteModelCells:function(obj){
             var self = this;
@@ -465,6 +475,11 @@ var model = {
         editable:true,
         editor:"text",
         validation:("required number"||function(){}),
+        keyBridge:{
+            enter:"click",
+            13:"click",
+            "shift && enter":"click"
+        },
         delegate:{
             target:"",
             click:function(){}
