@@ -67,7 +67,7 @@
     cp.map = function(group,callback){
         for(var i=0,len=group.length,node,list=[];i<len;i++){
             node = group[i];
-            node = callback(i,node);
+            node = callback(node,i);
             if(node !== undefined){
                 list.push(node);
             }

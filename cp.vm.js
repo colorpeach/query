@@ -1,5 +1,6 @@
 (function(){
-    var guid = 0;
+    var guid = 0,
+        expando = (new Date).getTime();
     
     cp.vm = function(m,c){
         return new VM(c,m);
@@ -119,6 +120,14 @@
                 self = this;
             cp.each(events,function(n,i){
                 cp.bind(node,i,function(e){n.call(node,e,self._generateArgs(modelCell.dcId))});
+            });
+        },
+        _generateKeyBridge:function(node){
+            //TODO bind event listener when haven't bind 
+            cp.bind(node,"keyDown.dc"+expando,function(e){
+                var key = e.keyCode;
+                
+                cp.each(keyBridge);
             });
         },
         _generateArgs:function(dcId){
@@ -473,12 +482,24 @@ var model = {
         name:"",
         view:function(){},
         editable:true,
-        editor:"text",
+        editor:{
+            input:function(val){
+                
+            },
+            output:function(){
+                return val;
+            },
+            toView:function(){
+                
+            },
+            toEdit:function(){
+                
+            }
+        },
         validation:("required number"||function(){}),
         keyBridge:{
-            enter:"click",
-            13:"click",
-            "shift && enter":"click"
+            enter:"node:click",
+            "shift && enter":"node:click"
         },
         delegate:{
             target:"",
